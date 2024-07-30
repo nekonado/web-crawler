@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  crawler:
+    build: .
+    container_name: crawler-${TIMESTAMP}
+    volumes:
+      - ./output:/app/output
+    command: python crawler.py
+    environment:
+      - TIMESTAMP=${TIMESTAMP}
