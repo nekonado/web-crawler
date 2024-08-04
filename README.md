@@ -92,10 +92,8 @@ This script will create the `output` directory (if it doesn't exist), build the 
 
    The results of the crawl will be saved in the `output` directory as two CSV files:
 
-   - **`interim_data.csv`**: An intermediate file that stores crawling data during the process.
-   - **`final_data_yyyymmdd.csv`**: The final sorted output file where the results are saved after processing.
-
-Example: `output/final_data_20240801.csv`
+   - **`temp_yyyymmdd.csv`**: An temporary file that stores crawling data during the process.
+   - **`crawl_result_yyyymmdd.csv`**: The final sorted output file where the results are saved after processing.
 
 ## Technical Details
 

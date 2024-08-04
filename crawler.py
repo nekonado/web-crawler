@@ -6,13 +6,16 @@ import csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import os
+from datetime import datetime
 
 # Constants
 MAX_RETRIES = 3
 DELAY_BETWEEN_REQUESTS = 1  # Delay between requests in seconds
 NUM_THREADS = 4  # Number of parallel threads
-INTERIM_FILE = 'output/interim_data.csv'  # Intermediate output file
-FINAL_FILE = 'output/final_data.csv'  # Final sorted output file
+
+TIMESTAMP = datetime.now().strftime('%Y%m%d')
+TEMP_FILE = f'output/temp_{TIMESTAMP}.csv'  # Temporary output file
+FINAL_FILE = f'output/crawl_result_{TIMESTAMP}.csv'  # Final sorted output file
 
 # Load configuration from JSON file
 def load_config():
@@ -84,8 +87,8 @@ def crawl_website(start_url):
     to_visit = [normalize_url(start_url)]  # Queue of URLs to visit
 
     # Create interim CSV file and write header
-    if not os.path.exists(INTERIM_FILE):
-        with open(INTERIM_FILE, mode='w', newline='', encoding='utf-8') as file:
+    if not os.path.exists(TEMP_FILE):
+        with open(TEMP_FILE, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=['url', 'title', 'status_code'])
             writer.writeheader()
 
@@ -101,12 +104,12 @@ def crawl_website(start_url):
                 to_visit.extend(links)
 
                 title, status_code = fetch_title_and_status(current_url)
-                write_to_csv(INTERIM_FILE, {'url': current_url, 'title': title, 'status_code': status_code})
+                write_to_csv(TEMP_FILE, {'url': current_url, 'title': title, 'status_code': status_code})
 
                 time.sleep(DELAY_BETWEEN_REQUESTS)
 
     # Sort and move to final CSV file
-    with open(INTERIM_FILE, mode='r', encoding='utf-8') as infile, open(FINAL_FILE, mode='w', newline='', encoding='utf-8') as outfile:
+    with open(TEMP_FILE, mode='r', encoding='utf-8') as infile, open(FINAL_FILE, mode='w', newline='', encoding='utf-8') as outfile:
         reader = csv.DictReader(infile)
         writer = csv.DictWriter(outfile, fieldnames=['url', 'title', 'status_code'])
         writer.writeheader()
