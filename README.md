@@ -22,21 +22,20 @@ The project is organized as follows:
 
 ### Explanation of Files and Directories
 
-### Explanation of Files and Directories
-
 - **`output/`**: Directory for storing the crawling results in CSV format. The `.keep` file ensures the directory exists even if empty. After the crawler runs, CSV files are created in this directory, with filenames including a timestamp indicating the date of execution. The CSV files include the following columns:
 
   - **url**: The URL of the crawled page.
   - **title**: The title of the page.
   - **status_code**: The HTTP status code of the page.
+  - **referer**: The URL of the page from which this link was found.
 
   Example:
 
   ```csv
-  url,title,status_code
-  http://example.com,Example Domain,200
-  http://example.com/page1,Page 1,200
-  http://example.com/page2,Page 2,404
+  url,title,status_code,referer
+  http://example.com,Example Domain,200,Direct Access
+  http://example.com/page1,Page 1,200,http://example.com
+  http://example.com/page2,Page 2,404,http://example.com/page1
   ```
 
 - **`.gitignore`**: Specifies files and directories to be ignored by Git. This includes `config.json` and any output files except `output/.keep`.
@@ -65,7 +64,7 @@ The project is organized as follows:
 1. **Copy `config.sample.json` to `config.json`**:
 
 ```bash
-cp config.sample.json config.json
+  cp config.sample.json config.json
 ```
 
 2. **Edit `config.json`**:

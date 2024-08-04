@@ -44,7 +44,7 @@ def normalize_url(url):
     parsed_url = urlparse(url)
     return urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, '', '', ''))
 
-def get_all_links(url, domain, visited):
+def get_all_links(url, domain, visited, referers):
     """Extract and return all valid links from a page."""
     response = fetch_page(url, headers)
     if not response:
@@ -60,6 +60,7 @@ def get_all_links(url, domain, visited):
 
         if domain in parsed_url.netloc and normalized_url not in visited:
             visited.add(normalized_url)
+            referers[normalized_url] = url
             links.append(normalized_url)
     return links
 
@@ -77,24 +78,25 @@ def fetch_title_and_status(url):
 def write_to_csv(file, data):
     """Write data to a CSV file."""
     with open(file, mode='a', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=['url', 'title', 'status_code'])
+        writer = csv.DictWriter(file, fieldnames=['url', 'title', 'status_code', 'referer'])
         writer.writerow(data)
 
 def crawl_website(start_url):
-    """Crawl a website and save URL, title, and status code to CSV."""
+    """Crawl a website and save URL, title, status code, and referer to CSV."""
     domain = urlparse(start_url).netloc
     visited = set()
+    referers = {}  # Dictionary to track referers
     to_visit = [normalize_url(start_url)]  # Queue of URLs to visit
 
-    # Create interim CSV file and write header
+    # Create temporary CSV file and write header
     if not os.path.exists(TEMP_FILE):
         with open(TEMP_FILE, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=['url', 'title', 'status_code'])
+            writer = csv.DictWriter(file, fieldnames=['url', 'title', 'status_code', 'referer'])
             writer.writeheader()
 
     while to_visit:
         with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
-            futures = {executor.submit(get_all_links, current_url, domain, visited): current_url for current_url in to_visit}
+            futures = {executor.submit(get_all_links, current_url, domain, visited, referers): current_url for current_url in to_visit}
             to_visit = []
 
             for future in as_completed(futures):
@@ -104,14 +106,15 @@ def crawl_website(start_url):
                 to_visit.extend(links)
 
                 title, status_code = fetch_title_and_status(current_url)
-                write_to_csv(TEMP_FILE, {'url': current_url, 'title': title, 'status_code': status_code})
+                referer = referers.get(current_url, 'Direct Access')
+                write_to_csv(TEMP_FILE, {'url': current_url, 'title': title, 'status_code': status_code, 'referer': referer})
 
                 time.sleep(DELAY_BETWEEN_REQUESTS)
 
     # Sort and move to final CSV file
     with open(TEMP_FILE, mode='r', encoding='utf-8') as infile, open(FINAL_FILE, mode='w', newline='', encoding='utf-8') as outfile:
         reader = csv.DictReader(infile)
-        writer = csv.DictWriter(outfile, fieldnames=['url', 'title', 'status_code'])
+        writer = csv.DictWriter(outfile, fieldnames=['url', 'title', 'status_code', 'referer'])
         writer.writeheader()
         sorted_rows = sorted(reader, key=lambda row: row['url'])
         writer.writerows(sorted_rows)
