@@ -1,0 +1,52 @@
+name: Scheduled Web Crawler with Commit
+
+on:
+  schedule:
+    # 日本時間で月曜日の午前3時（UTC日曜日18:00）
+    - cron: "0 18 * * 0"
+  workflow_dispatch: # 手動実行も可能にする
+
+jobs:
+  crawl-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Copy sample config if needed
+        run: |
+          if [ ! -f config.json ]; then
+            cp config.sample.json config.json
+          fi
+
+      - name: Run crawler
+        run: |
+          mkdir -p output
+          python crawler.py
+
+      - name: Find latest CSV file
+        id: find-csv
+        run: |
+          LATEST_CSV=$(ls -t output/crawl_result_*.csv | head -1)
+          echo "latest_csv=${LATEST_CSV}" >> $GITHUB_OUTPUT
+          cp "${LATEST_CSV}" output/crawl_result_latest.csv
+
+      - name: Commit results
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add output/crawl_result_latest.csv
+          git add ${{ steps.find-csv.outputs.latest_csv }}
+          git commit -m "Update crawler results [skip ci]" || echo "No changes to commit"
+          git push
