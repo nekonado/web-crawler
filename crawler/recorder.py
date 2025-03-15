@@ -31,12 +31,24 @@ class DataRecorder:
             self.logger.error(f"CSVファイル作成中のエラー: {e}")
             raise
 
+    def _escape_text_fields(self, data):
+        """テキストフィールドの改行をエスケープ"""
+        text_fields = ["title", "h1", "meta_description"]
+        for field in text_fields:
+            if field in data and data[field]:
+                # 改行文字をエスケープ（\n -> \\n, \r -> \\r）
+                data[field] = data[field].replace("\n", "\\n").replace("\r", "\\r")
+        return data
+
     def write_record(self, data):
         """データをCSVファイルに書き込む"""
         try:
+            # テキストフィールドの改行をエスケープ
+            escaped_data = self._escape_text_fields(data)
+
             with open(self.temp_file, mode="a", newline="", encoding="utf-8") as file:
                 writer = csv.DictWriter(file, fieldnames=CSV_FIELDS)
-                writer.writerow(data)
+                writer.writerow(escaped_data)
         except Exception as e:
             self.logger.error(f"CSV書き込み中のエラー: {e}")
 

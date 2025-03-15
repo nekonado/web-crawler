@@ -66,6 +66,7 @@ CSV_FIELDS = [
     "url",
     "status_code",
     "title",
+    "h1",
     "meta_description",
     "referrer",
     "canonical_url",

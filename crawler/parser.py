@@ -34,7 +34,7 @@ class PageParser:
         return links
 
     def extract_page_info(self, html_content, url):
-        """ページから情報を抽出（タイトル、メタディスクリプション、正規URL）"""
+        """ページから情報を抽出（タイトル、H1、メタディスクリプション、正規URL）"""
         try:
             soup = BeautifulSoup(html_content, "html.parser")
 
@@ -45,6 +45,10 @@ class PageParser:
                 if title_tag and title_tag.string
                 else "タイトルなし"
             )
+
+            # H1の抽出
+            h1_tag = soup.find("h1")
+            h1 = h1_tag.get_text().strip() if h1_tag else "H1なし"
 
             # メタディスクリプションの抽出
             meta_description = "説明なし"
@@ -60,6 +64,7 @@ class PageParser:
 
             return {
                 "title": title,
+                "h1": h1,
                 "meta_description": meta_description,
                 "canonical_url": canonical_url,
             }
@@ -67,6 +72,7 @@ class PageParser:
             self.logger.error(f"情報抽出中のエラー {url}: {e}")
             return {
                 "title": "情報抽出エラー",
+                "h1": "情報抽出エラー",
                 "meta_description": "情報抽出エラー",
                 "canonical_url": url,
             }
