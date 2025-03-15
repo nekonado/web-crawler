@@ -69,11 +69,12 @@ class WebCrawler:
     def fetch_and_process_page(self, url, depth):
         """ページを取得して処理し、データを記録する"""
         response = self.fetcher.fetch_page(url)
-        if not response:
-            # エラー時のレコード作成
+
+        # レスポンスがNoneの場合（robots.txtによる禁止など）
+        if response is None:
             return {
                 "url": url,
-                "status_code": 0,
+                "status_code": 0,  # robots.txtによる禁止や他の理由でリクエストが行われなかった
                 "title": "取得失敗",
                 "h1": "取得失敗",
                 "meta_description": "取得失敗",
@@ -82,22 +83,62 @@ class WebCrawler:
                 "depth": depth,
             }
 
-        # ページ情報の抽出
-        page_info = self.parser.extract_page_info(response.text, url)
+        # 接続エラーの場合（DummyResponseのステータスコードは-1）
+        if response.status_code == -1:
+            return {
+                "url": url,
+                "status_code": -1,  # 接続エラーを示す特別なコード
+                "title": "接続エラー",
+                "h1": "接続エラー",
+                "meta_description": "接続エラー",
+                "referrer": self.referrers.get(url, "Direct Access"),
+                "canonical_url": url,
+                "depth": depth,
+            }
 
-        # レコードの作成
-        record = {
-            "url": url,
-            "status_code": response.status_code,
-            "title": page_info["title"],
-            "h1": page_info["h1"],
-            "meta_description": page_info["meta_description"],
-            "referrer": self.referrers.get(url, "Direct Access"),
-            "canonical_url": page_info["canonical_url"],
-            "depth": depth,
-        }
+        # HTTPレスポンスがある場合（200 OKもエラーステータスコードも含む）
+        try:
+            # ステータスコードが200以外の場合は簡略情報を返す
+            if response.status_code != 200:
+                return {
+                    "url": url,
+                    "status_code": response.status_code,  # 実際のHTTPステータスコード
+                    "title": f"HTTPエラー {response.status_code}",
+                    "h1": f"HTTPエラー {response.status_code}",
+                    "meta_description": f"HTTPエラー {response.status_code}",
+                    "referrer": self.referrers.get(url, "Direct Access"),
+                    "canonical_url": url,
+                    "depth": depth,
+                }
 
-        return record
+            # 正常なレスポンス（200 OK）の場合は通常通り処理
+            page_info = self.parser.extract_page_info(response.text, url)
+
+            # レコードの作成
+            record = {
+                "url": url,
+                "status_code": response.status_code,
+                "title": page_info["title"],
+                "h1": page_info["h1"],
+                "meta_description": page_info["meta_description"],
+                "referrer": self.referrers.get(url, "Direct Access"),
+                "canonical_url": page_info["canonical_url"],
+                "depth": depth,
+            }
+
+            return record
+        except Exception as e:
+            self.logger.error(f"ページ処理中のエラー {url}: {e}")
+            return {
+                "url": url,
+                "status_code": response.status_code,  # エラーが発生しても実際のステータスコードを保持
+                "title": "処理エラー",
+                "h1": "処理エラー",
+                "meta_description": "処理エラー",
+                "referrer": self.referrers.get(url, "Direct Access"),
+                "canonical_url": url,
+                "depth": depth,
+            }
 
     def crawl_website(self):
         """ウェブサイトをクローリングし、情報をCSVに保存"""

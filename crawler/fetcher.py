@@ -50,7 +50,7 @@ class WebFetcher:
         return parser.can_fetch(self.user_agent, url)
 
     def fetch_page(self, url, retries=MAX_RETRIES):
-        """ページを取得してレスポンスを返す、失敗した場合はNoneを返す"""
+        """ページを取得してレスポンスを返す、エラー時もレスポンスを返す可能性あり"""
         # robots.txtをチェック
         if not self.can_fetch(url):
             self.logger.info(f"robots.txtによりアクセス禁止: {url}")
@@ -58,9 +58,9 @@ class WebFetcher:
 
         try:
             response = requests.get(url, headers=self.headers, timeout=5)
-            response.raise_for_status()
+            # HTTPステータスコードに関わらず、レスポンスを返す
             return response
-        except (requests.HTTPError, requests.ConnectionError, requests.Timeout) as e:
+        except (requests.ConnectionError, requests.Timeout) as e:
             if retries > 0:
                 self.logger.warning(
                     f"再試行中 {url} ({MAX_RETRIES - retries + 1}/{MAX_RETRIES}): {e}"
@@ -69,4 +69,11 @@ class WebFetcher:
                 return self.fetch_page(url, retries - 1)
             else:
                 self.logger.error(f"取得失敗 {url}: {e}")
-                return None
+
+                # 接続エラーを示すダミーのレスポンスオブジェクトを作成
+                class DummyResponse:
+                    def __init__(self):
+                        self.status_code = -1  # 接続エラーを示す特別なコード
+                        self.text = ""
+
+                return DummyResponse()
