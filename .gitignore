@@ -1,4 +1,4 @@
-output/*
+# output/*
 !output/.keep
-config.json
+# config.json
 .DS_Store
