@@ -1,0 +1,63 @@
+"""
+データ記録モジュール
+"""
+
+import csv
+import os
+from .config import CSV_FIELDS
+
+
+class DataRecorder:
+    """クロール結果の記録を行うクラス"""
+
+    def __init__(self, temp_file, final_file, logger):
+        self.temp_file = temp_file
+        self.final_file = final_file
+        self.logger = logger
+
+        # 一時ファイルの初期化
+        self._initialize_csv(self.temp_file)
+
+    def _initialize_csv(self, file_path):
+        """CSVファイルの初期化とヘッダーの書き込み"""
+        try:
+            # 出力ディレクトリの確認
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+            with open(file_path, mode="w", newline="", encoding="utf-8") as file:
+                writer = csv.DictWriter(file, fieldnames=CSV_FIELDS)
+                writer.writeheader()
+        except Exception as e:
+            self.logger.error(f"CSVファイル作成中のエラー: {e}")
+            raise
+
+    def write_record(self, data):
+        """データをCSVファイルに書き込む"""
+        try:
+            with open(self.temp_file, mode="a", newline="", encoding="utf-8") as file:
+                writer = csv.DictWriter(file, fieldnames=CSV_FIELDS)
+                writer.writerow(data)
+        except Exception as e:
+            self.logger.error(f"CSV書き込み中のエラー: {e}")
+
+    def finalize(self):
+        """一時ファイルを読み込み、ソートして最終ファイルに書き込む"""
+        try:
+            with open(self.temp_file, mode="r", encoding="utf-8") as infile, open(
+                self.final_file, mode="w", newline="", encoding="utf-8"
+            ) as outfile:
+                reader = csv.DictReader(infile)
+                writer = csv.DictWriter(outfile, fieldnames=CSV_FIELDS)
+                writer.writeheader()
+
+                # URLでソート
+                sorted_rows = sorted(reader, key=lambda row: row["url"])
+                writer.writerows(sorted_rows)
+
+            self.logger.info(
+                f"クロール完了。結果は '{self.final_file}' に保存されました。"
+            )
+            return True
+        except Exception as e:
+            self.logger.error(f"最終CSVファイル作成中のエラー: {e}")
+            return False
