@@ -27,15 +27,16 @@ The project is organized as follows:
   - url: The URL of the crawled page.
   - title: The title of the page.
   - status_code: The HTTP status code of the page.
-  - referer: The URL of the page from which this link was found.
+  - referrer: The URL of the page from which this link was found.
+  - depth: The depth of the page from the starting URL.
 
   Example:
 
   ```csv
-  url,title,status_code,referer
-  http://example.com,Example Domain,200,Direct Access
-  http://example.com/page1,Page 1,200,http://example.com
-  http://example.com/page2,Page 2,404,http://example.com/page1
+  url,title,status_code,referrer,depth
+  http://example.com,Example Domain,200,Direct Access,0
+  http://example.com/page1,Page 1,200,http://example.com,1
+  http://example.com/page2,Page 2,404,http://example.com/page1,2
   ```
 
 - `.gitignore`: Specifies files and directories to be ignored by Git. This includes `config.json` and any output files except `output/.keep`.
