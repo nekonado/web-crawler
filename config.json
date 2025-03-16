@@ -1,5 +1,5 @@
 {
   "start_url": "https://konohoken.com/",
   "user_agent": "Mozilla/5.0 (compatible; MyCrawler/1.0; +https://konohoken.com/)",
-  "use_robots_txt": true
+  "use_robots_txt": false
 }
