@@ -41,9 +41,8 @@ jobs:
       - name: Process crawler results
         id: process-results
         run: |
-          # 日付付きのCSVファイルを見つけてoutput/actionsにコピー
+          # 日付付きのCSVファイルを見つける (正しいディレクトリを参照)
           LATEST_CSV=$(ls -t output/actions/crawl_result_*.csv | head -1)
-          cp "${LATEST_CSV}" output/actions/
           echo "latest_csv=${LATEST_CSV}" >> $GITHUB_OUTPUT
 
           # latestバージョンも作成（Gist用）
