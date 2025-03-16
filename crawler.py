@@ -211,8 +211,11 @@ def main():
     # ロガーの設定
     logger = setup_logger()
 
+    # 環境変数からOUTPUT_DIRを取得
+    output_dir = os.environ.get("OUTPUT_DIR", "output")
+
     # 出力ディレクトリの確認
-    os.makedirs("output", exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
 
     # 設定の読み込み
     config = load_config(logger)

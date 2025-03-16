@@ -1,2 +1,4 @@
-# config.json
+output/local/*
+!output/local/.keep
+
 .DS_Store

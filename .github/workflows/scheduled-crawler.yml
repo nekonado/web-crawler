@@ -36,7 +36,7 @@ jobs:
       - name: Run crawler
         run: |
           mkdir -p output/actions
-          python crawler.py
+          OUTPUT_DIR=output/actions python crawler.py
 
       - name: Process crawler results
         id: process-results

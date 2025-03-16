@@ -23,10 +23,13 @@ def get_timestamp():
 # ファイルパスの設定
 def get_file_paths():
     timestamp = get_timestamp()
+    # 環境変数からOUTPUT_DIRを取得。設定されていない場合はデフォルトで"output"
+    output_dir = os.environ.get("OUTPUT_DIR", "output")
+
     return {
-        "temp_file": f"output/temp_{timestamp}.csv",
-        "final_file": f"output/crawl_result_{timestamp}.csv",
-        "log_file": f"output/crawler_log_{timestamp}.log",
+        "temp_file": f"{output_dir}/temp_{timestamp}.csv",
+        "final_file": f"{output_dir}/crawl_result_{timestamp}.csv",
+        "log_file": f"{output_dir}/crawler_log_{timestamp}.log",
     }
 
 
