@@ -9,4 +9,4 @@ services:
     command: python crawler.py
     environment:
       - TIMESTAMP=${TIMESTAMP}
-      - OUTPUT_DIR=output/local
+      - OUTPUT_DIR=${OUTPUT_DIR}

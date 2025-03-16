@@ -39,7 +39,7 @@ def setup_logger():
     log_file = file_paths["log_file"]
 
     # 出力ディレクトリの確認
-    os.makedirs("output", exist_ok=True)
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
     logging.basicConfig(
         level=logging.INFO,
