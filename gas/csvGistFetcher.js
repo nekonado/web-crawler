@@ -43,6 +43,12 @@ function updateCurrentSpreadsheet(csvData) {
   sheet.clear();
   sheet.getRange(1, 1, csvData.length, csvData[0].length).setValues(csvData);
 
+  // ヘッダー行（1行目）の書式設定 - 背景色: #333、文字色: #fff
+  sheet.getRange(1, 1, 1, csvData[0].length)
+    .setBackground("#333333")
+    .setFontColor("#ffffff")
+    .setFontWeight("bold");
+
   // タイムスタンプを追加
   const timestampSheet = ss.getSheetByName("更新履歴") || ss.insertSheet("更新履歴");
   timestampSheet.appendRow([new Date(), "更新成功"]);
