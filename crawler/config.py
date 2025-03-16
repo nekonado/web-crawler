@@ -5,7 +5,7 @@
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 # 定数
 MAX_RETRIES = 3  # リクエスト再試行の最大回数
@@ -15,9 +15,12 @@ MAX_URLS = 5000  # クロールする最大URL数
 MAX_DEPTH = 10  # クロールする最大深さ
 
 
-# タイムスタンプの取得
+# タイムスタンプの取得（日本時間）
 def get_timestamp():
-    return datetime.now().strftime("%Y%m%d%H%M")
+    # UTCから日本時間（JST, UTC+9）に変換
+    jst = timezone(timedelta(hours=9))
+    now_jst = datetime.now(jst)
+    return now_jst.strftime("%Y%m%d%H%M")
 
 
 # ファイルパスの設定
