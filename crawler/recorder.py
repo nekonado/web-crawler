@@ -4,6 +4,7 @@
 
 import csv
 import os
+import shutil
 from .config import CSV_FIELDS
 
 
@@ -66,15 +67,12 @@ class DataRecorder:
                 sorted_rows = sorted(reader, key=lambda row: row["url"])
                 writer.writerows(sorted_rows)
 
-            # 同じディレクトリにlatest版も作成
-            output_dir = os.path.dirname(self.final_file)
+            # latest版を作成する場所を取得
+            output_dir = os.path.dirname(os.path.dirname(self.final_file))
             latest_file = os.path.join(output_dir, "crawl_result_latest.csv")
 
             # 最終ファイルをlatestファイルにコピー
-            with open(self.final_file, "r", encoding="utf-8") as src, open(
-                latest_file, "w", newline="", encoding="utf-8"
-            ) as dest:
-                dest.write(src.read())
+            shutil.copy2(self.final_file, latest_file)
 
             self.logger.info(
                 f"クロール完了。結果は '{self.final_file}' に保存されました。"

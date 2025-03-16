@@ -41,23 +41,26 @@ jobs:
       - name: Process crawler results
         id: process-results
         run: |
-          # 日付付きのCSVファイルを見つける (正しいディレクトリを参照)
-          LATEST_CSV=$(ls -t output/actions/crawl_result_*.csv | grep -v "latest" | head -1)
-          echo "latest_csv=${LATEST_CSV}" >> $GITHUB_OUTPUT
+          # タイムスタンプ付きフォルダを見つける (最新のディレクトリを取得)
+          LATEST_DIR=$(find output/actions -mindepth 1 -maxdepth 1 -type d | sort -r | head -1)
 
-          # 日付付きのCSVファイルがあれば、それをコピーしてlatestを作成
-          if [ -n "${LATEST_CSV}" ] && [ "${LATEST_CSV}" != "output/actions/crawl_result_latest.csv" ]; then
-            cp "${LATEST_CSV}" output/actions/crawl_result_latest.csv
-            echo "Latest CSV file created from ${LATEST_CSV}"
+          if [ -n "${LATEST_DIR}" ]; then
+            echo "latest_dir=${LATEST_DIR}" >> $GITHUB_OUTPUT
+            echo "Latest directory: ${LATEST_DIR}"
           else
-            echo "Latest CSV file already exists or no date-based CSV files found"
+            echo "No timestamp directory found"
+            exit 1
           fi
 
       - name: Commit results
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add output/actions/
+
+          # latest.csvファイルと結果フォルダのみをコミット
+          git add output/actions/crawl_result_latest.csv
+          git add ${{ steps.process-results.outputs.latest_dir }}/crawl_result.csv
+
           git commit -m "Update crawler results [skip ci]" || echo "No changes to commit"
           git push
 

@@ -17,7 +17,7 @@ MAX_DEPTH = 10  # クロールする最大深さ
 
 # タイムスタンプの取得
 def get_timestamp():
-    return datetime.now().strftime("%Y%m%d")
+    return datetime.now().strftime("%Y%m%d%H%M")
 
 
 # ファイルパスの設定
@@ -26,10 +26,19 @@ def get_file_paths():
     # 環境変数からOUTPUT_DIRを取得。設定されていない場合はデフォルトで"output"
     output_dir = os.environ.get("OUTPUT_DIR", "output")
 
+    # タイムスタンプフォルダを作成
+    timestamp_dir = f"{output_dir}/{timestamp}"
+
+    # フォルダが存在しない場合は作成
+    os.makedirs(timestamp_dir, exist_ok=True)
+
     return {
-        "temp_file": f"{output_dir}/temp_{timestamp}.csv",
-        "final_file": f"{output_dir}/crawl_result_{timestamp}.csv",
-        "log_file": f"{output_dir}/crawler_log_{timestamp}.log",
+        "temp_file": f"{timestamp_dir}/temp.csv",
+        "final_file": f"{timestamp_dir}/crawl_result.csv",
+        "log_file": f"{timestamp_dir}/crawler.log",
+        "latest_file": f"{output_dir}/crawl_result_latest.csv",
+        "timestamp_dir": timestamp_dir,
+        "timestamp": timestamp,
     }
 
 
