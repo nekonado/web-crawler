@@ -42,12 +42,12 @@ jobs:
         id: process-results
         run: |
           # 日付付きのCSVファイルを見つけてoutput/actionsにコピー
-          LATEST_CSV=$(ls -t output/crawl_result_*.csv | head -1)
+          LATEST_CSV=$(ls -t output/actions/crawl_result_*.csv | head -1)
           cp "${LATEST_CSV}" output/actions/
           echo "latest_csv=${LATEST_CSV}" >> $GITHUB_OUTPUT
 
           # latestバージョンも作成（Gist用）
-          cp "${LATEST_CSV}" output/crawl_result_latest.csv
+          cp "${LATEST_CSV}" output/actions/crawl_result_latest.csv
 
       - name: Commit results
         run: |
@@ -63,5 +63,5 @@ jobs:
         with:
           token: ${{ secrets.GIST_TOKEN }}
           gist_id: ${{ secrets.GIST_ID }}
-          file_path: output/crawl_result_latest.csv
+          file_path: output/actions/crawl_result_latest.csv
           file_type: text
