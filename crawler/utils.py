@@ -6,14 +6,14 @@ from urllib.parse import urljoin, urlparse, urlunparse
 
 
 def normalize_url(url):
-    """URLからクエリパラメータとフラグメントを削除して正規化"""
+    """URLからクエリパラメータとフラグメントを削除して正規化し、末尾にスラッシュを追加する"""
     parsed_url = urlparse(url)
-    # URLパスの末尾のスラッシュを統一する
+    # URLパスの末尾にスラッシュを追加する
     path = parsed_url.path
     if not path:
         path = "/"
-    elif path != "/" and path.endswith("/"):
-        path = path.rstrip("/")
+    elif not path.endswith("/"):
+        path = path + "/"
     return urlunparse((parsed_url.scheme, parsed_url.netloc, path, "", "", ""))
 
 
