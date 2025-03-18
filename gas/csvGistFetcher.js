@@ -5,8 +5,7 @@
  */
 function fetchCSVFromGist() {
   // GistのRaw URLを設定
-  // https://gist.github.com/ユーザー名/GistID/raw/crawl_result_latest.csv
-  const gistUrl = "https://gist.githubusercontent.com/nekonado/cb7e1e94cd6bac63807f81dd825d0b75/raw/a7bd602f705aa14c1c83833735bb597ded76d438/crawl_result_latest.csv";
+  const gistUrl = "https://gist.githubusercontent.com/nekonado/cb7e1e94cd6bac63807f81dd825d0b75/raw";
 
   try {
     // CSVデータを取得
