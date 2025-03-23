@@ -1,4 +1,4 @@
-name: Scheduled Web Crawler with Commit and Gist Upload
+name: Scheduled Web Crawler with Dynamic GitHub Pages URL
 
 on:
   schedule:
@@ -10,11 +10,12 @@ permissions:
   contents: write
 
 jobs:
-  crawl-and-commit:
+  crawl-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # gh-pagesブランチの存在確認を削除し、mainブランチだけをチェックアウト
+      - name: Checkout main branch
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -52,7 +53,29 @@ jobs:
             exit 1
           fi
 
-      - name: Commit results
+      - name: Prepare Pages deployment
+        id: prepare-deployment
+        run: |
+          # GitHub Pagesのデプロイ用ディレクトリを作成
+          mkdir -p pages_deploy
+
+          # ランダムな文字列を生成して非公開URLパスとして使用
+          RANDOM_PATH=$(openssl rand -hex 16)
+          echo "random_path=${RANDOM_PATH}" >> $GITHUB_OUTPUT
+          mkdir -p pages_deploy/${RANDOM_PATH}
+
+          # 最新のCSVファイルをコピー
+          cp output/actions/crawl_result_latest.csv pages_deploy/${RANDOM_PATH}/data.csv
+          cp ${{ steps.process-results.outputs.latest_dir }}/crawl_result.csv pages_deploy/${RANDOM_PATH}/latest.csv
+
+          # インデックスファイルを作成（常に同じURLでアクセス可能）
+          # このJSONファイルはGASからアクセスされる
+          echo "{\"current_path\":\"${RANDOM_PATH}\",\"updated_at\":\"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"}" > pages_deploy/index.json
+
+          # シンプルなHTMLファイルを作成
+          echo "<!DOCTYPE html><html><head><title>CSV Data</title></head><body><p>データアクセスはAPIを通してのみ可能です。</p></body></html>" > pages_deploy/index.html
+
+      - name: Commit results to main branch
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -64,10 +87,9 @@ jobs:
           git commit -m "Update crawler results [skip ci]" || echo "No changes to commit"
           git push
 
-      - name: Upload to GitHub Gist
-        uses: exuanbo/actions-deploy-gist@v1
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          token: ${{ secrets.GIST_TOKEN }}
-          gist_id: ${{ secrets.GIST_ID }}
-          file_path: output/actions/crawl_result_latest.csv
-          file_type: text
+          folder: pages_deploy
+          branch: gh-pages
+          target-folder: /

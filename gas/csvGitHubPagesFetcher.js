@@ -1,16 +1,22 @@
 /**
- * GistからCSVデータを取得して2つのスプレッドシートに格納するスクリプト
- * 1. 現在のスプレッドシートのlatestシートを更新
- * 2. historyスプレッドシートに新しいシートを作成して履歴を保存
+ * GitHub PagesからCSVデータを取得して2つのスプレッドシートに格納するスクリプト
  */
-function fetchCSVFromGist() {
-  // GistのRaw URLを設定
-  const gistUrl = "https://gist.githubusercontent.com/nekonado/cb7e1e94cd6bac63807f81dd825d0b75/raw";
+function fetchCSVFromDynamicGitHubPages() {
+  // インデックスJSONのURLを設定（固定URL）
+  const indexUrl = "https://nekonado.github.io/web-crawler/index.json";
 
   try {
+    // まずインデックスJSONを取得して現在のパスを取得
+    const indexResponse = UrlFetchApp.fetch(indexUrl);
+    const indexData = JSON.parse(indexResponse.getContentText());
+    const currentPath = indexData.current_path;
+
+    // 取得したパスを使ってCSVのURLを構築
+    const csvUrl = `https://nekonado.github.io/web-crawler/${currentPath}/data.csv`;
+
     // CSVデータを取得
-    const response = UrlFetchApp.fetch(gistUrl);
-    const csvContent = response.getContentText();
+    const csvResponse = UrlFetchApp.fetch(csvUrl);
+    const csvContent = csvResponse.getContentText();
 
     // CSVデータをパース
     const csvData = Utilities.parseCsv(csvContent);
@@ -19,7 +25,17 @@ function fetchCSVFromGist() {
     updateCurrentSpreadsheet(csvData);
 
     // 履歴スプレッドシートを更新
-    updateHistorySpreadsheet(csvData);
+    updateHistorySpreadsheet(csvData, indexData.updated_at);
+
+    // 更新情報を記録
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const timestampSheet = ss.getSheetByName("更新履歴") || ss.insertSheet("更新履歴");
+    timestampSheet.appendRow([
+      new Date(),
+      "更新成功",
+      `パス: ${currentPath}`,
+      `最終更新: ${indexData.updated_at}`
+    ]);
 
     Logger.log("CSVデータの取得と書き込みが正常に完了しました");
   } catch (e) {
@@ -34,6 +50,7 @@ function fetchCSVFromGist() {
 /**
  * 現在のスプレッドシートのlatestシートを更新する関数
  */
+
 function updateCurrentSpreadsheet(csvData) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("latest") || ss.insertSheet("latest");
@@ -56,8 +73,8 @@ function updateCurrentSpreadsheet(csvData) {
 /**
  * 履歴スプレッドシートに新しいシートを作成して更新する関数
  */
-function updateHistorySpreadsheet(csvData) {
-  // 履歴スプレッドシートのIDを取得（実際のIDに置き換える必要があります）
+function updateHistorySpreadsheet(csvData, updatedAt) {
+  // 履歴スプレッドシートのIDを取得
   const historySpreadsheetId = getHistorySpreadsheetId();
 
   // 履歴スプレッドシートが見つからない場合は作成
@@ -89,6 +106,10 @@ function updateHistorySpreadsheet(csvData) {
     // 日時と説明を追加（シートの左上に）
     newSheet.getRange(1, csvData[0].length + 2).setValue("クロール実行日時:");
     newSheet.getRange(1, csvData[0].length + 3).setValue(now).setNumberFormat("yyyy/MM/dd HH:mm:ss");
+
+    // 元データの更新日時も追加
+    newSheet.getRange(2, csvData[0].length + 2).setValue("データ更新日時:");
+    newSheet.getRange(2, csvData[0].length + 3).setValue(updatedAt);
 
     Logger.log("履歴スプレッドシートにシート「" + sheetName + "」を追加しました");
 
@@ -276,13 +297,13 @@ function setTrigger() {
   // 既存のトリガーをすべて削除
   const triggers = ScriptApp.getProjectTriggers();
   for (let i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === 'fetchCSVFromGist') {
+    if (triggers[i].getHandlerFunction() === 'fetchCSVFromDynamicGitHubPages') {
       ScriptApp.deleteTrigger(triggers[i]);
     }
   }
 
   // 毎週月曜の午前5時に実行するトリガーを設定
-  ScriptApp.newTrigger('fetchCSVFromGist')
+  ScriptApp.newTrigger('fetchCSVFromDynamicGitHubPages')
     .timeBased()
     .onWeekDay(ScriptApp.WeekDay.MONDAY)
     .atHour(5)
@@ -291,11 +312,12 @@ function setTrigger() {
   Logger.log("トリガーが設定されました");
 }
 
+
 /**
  * テスト用の手動実行関数
  */
 function runTest() {
-  fetchCSVFromGist();
+  fetchCSVFromDynamicGitHubPages();
 }
 
 /**
