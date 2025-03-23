@@ -1,5 +1,5 @@
 """
-ページ取得モジュール
+ユーティリティモジュール
 """
 
 from urllib.parse import urljoin, urlparse, urlunparse

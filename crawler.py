@@ -111,6 +111,22 @@ class WebCrawler:
                     "depth": depth,
                 }
 
+            # コンテンツタイプをチェック
+            content_type = response.headers.get("Content-Type", "").lower()
+            if not (
+                "text/html" in content_type or "application/xhtml+xml" in content_type
+            ):
+                return {
+                    "url": url,
+                    "status_code": response.status_code,
+                    "title": f"非HTMLコンテンツ ({content_type})",
+                    "h1": f"非HTMLコンテンツ",
+                    "meta_description": f"コンテンツタイプ: {content_type}",
+                    "referrer": self.referrers.get(url, "Direct Access"),
+                    "canonical_url": url,
+                    "depth": depth,
+                }
+
             # 正常なレスポンス（200 OK）の場合は通常通り処理
             page_info = self.parser.extract_page_info(response.text, url)
 
