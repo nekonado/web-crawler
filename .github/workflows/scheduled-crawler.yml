@@ -72,8 +72,8 @@ jobs:
           # このJSONファイルはGASからアクセスされる
           echo "{\"current_path\":\"${RANDOM_PATH}\",\"updated_at\":\"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"}" > pages_deploy/index.json
 
-          # シンプルなHTMLファイルを作成
-          echo "<!DOCTYPE html><html><head><title>CSV Data</title></head><body><p>データアクセスはAPIを通してのみ可能です。</p></body></html>" > pages_deploy/index.html
+          # HTMLテンプレートをGitHub Pagesディレクトリにコピー
+          cp templates/index.html pages_deploy/index.html
 
       - name: Commit results to main branch
         run: |
